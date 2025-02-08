@@ -1,6 +1,6 @@
 # POD Order Processing Tool
 
-A web-based application that processes Excel files containing order information and converts them into a standardized CSV format for POD processing.
+A web-based application that processes Excel files containing order information and converts them into a standardized CSV format for POD processing. Uploading the PBS file to the Hachette SFTP will force the download of the invoice and packing documents.
 
 ## Features
 
