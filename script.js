@@ -38,7 +38,7 @@ async function readExcelFile(file) {
                 });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
-                    raw: false,
+                    raw: true, // Changed to true to preserve numeric values
                     defval: ''
                 });
                 resolve(jsonData);
@@ -59,9 +59,31 @@ function processData(data) {
     // Generate a tracking reference for this batch
     const trackingRef = generateTrackingReference();
     
+    // Find the quantity field name (case-insensitive)
+    const getQuantityFieldName = (row) => {
+        const possibleNames = ['Quantity', 'quantity', 'QUANTITY', 'Qty', 'qty', 'QTY'];
+        return possibleNames.find(name => name in row);
+    };
+
     processedData = data.map((row, index) => {
         // Set default date to 26112024 if not provided
         const defaultDate = '26112024';
+        
+        // Find the quantity field name
+        const quantityField = getQuantityFieldName(row);
+        
+        // Handle quantity properly
+        let quantity = '1'; // Default
+        if (quantityField && row[quantityField] !== undefined && row[quantityField] !== null) {
+            // Convert to number and then string to handle various formats
+            // This ensures that 0 is preserved as "0" and not defaulted to "1"
+            quantity = String(Number(row[quantityField]));
+            
+            // If conversion resulted in NaN, use default
+            if (quantity === 'NaN') {
+                quantity = '1';
+            }
+        }
         
         return {
             reference: row.Reference?.toString() || '',
@@ -69,7 +91,7 @@ function processData(data) {
             isbn: row.ISBN?.toString() || '',
             date: defaultDate,
             courier: 'DPD',
-            quantity: row.Quantity?.toString() || '1',
+            quantity: quantity,
             status: '1',
             trackingRef: trackingRef
         };
